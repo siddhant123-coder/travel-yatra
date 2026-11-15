@@ -1,20 +1,42 @@
-# Vanguard Travel Marketplace
+# Travel Yatra 🌍
 
-A performance-first React/Vite travel package marketplace with a short scroll-driven airplane intro and a full marketplace experience.
+A modern travel platform designed to help users explore destinations
+and plan memorable journeys.
 
-## Run
+## Features
 
-```bash
-npm install
-npm run dev
-```
+- Explore travel destinations
+- Beautiful and responsive UI
+- Travel introduction videos
+- Interactive user experience
 
-Then open the local URL shown by Vite.
+## Tech Stack
 
-## Performance decisions
-- No Three.js canvas or particle/cloud simulation in the intro.
-- Scroll animation uses one passive listener and GPU-friendly `translate3d`.
-- No scroll event updates React state; only the airplane transform is updated.
-- Images use lazy loading below the fold.
-- No post-processing, WebGL effects, or animated blur layers.
-- The intro is intentionally short (135vh) with a flight path of roughly one quarter of the previous concept.
+- React
+- JavaScript
+- CSS
+- Vite
+
+## Installation
+
+Clone the repository:
+
+    git clone https://github.com/siddhant123-coder/travel-yatra.git
+
+Navigate to the project:
+
+    cd travel-yatra
+
+Install dependencies:
+
+    npm install
+
+Start development server:
+
+    npm run dev
+
+## Author
+
+Siddhant
+
+GitHub: https://github.com/siddhant123-coder
