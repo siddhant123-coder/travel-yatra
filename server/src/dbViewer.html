@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Travel Yatra — Database Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #090a0d;
+      --card: #12151b;
+      --border: #262c37;
+      --gold: #d9bd83;
+      --text: #f0f2f5;
+      --muted: #8b93a0;
+      --green: #48bb78;
+      --orange: #ed8936;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 30px;
+      font-size: 13px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 25px;
+    }
+    .header h1 {
+      font-size: 20px;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+    .header span {
+      color: var(--gold);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .btn {
+      background: #1a202b;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 12px;
+      display: inline-block;
+      transition: all 0.2s;
+    }
+    .btn:hover { border-color: var(--gold); color: var(--gold); }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .stat-card small {
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .stat-card b {
+      font-size: 24px;
+      color: var(--gold);
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      color: #fff;
+      border-bottom-color: var(--gold);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th {
+      text-align: left;
+      padding: 12px 14px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: #0e1116;
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #1a1f29;
+      color: #dce1e8;
+      font-size: 12px;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .badge-paid { background: rgba(72,187,120,0.15); color: #68d391; border: 1px solid rgba(72,187,120,0.3); }
+    .badge-pending { background: rgba(237,137,54,0.15); color: #ed8936; border: 1px solid rgba(237,137,54,0.3); }
+    .empty { padding: 30px; text-align: center; color: var(--muted); }
+    code { font-family: monospace; color: var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <span>TRAVEL YATRA · LIVE DATABASE VIEWER</span>
+      <h1>SQLite: a/server/prisma/dev.db</h1>
+    </div>
+    <div>
+      <button class="btn" onclick="loadData()">⟳ Refresh Data</button>
+      <a href="/api/db" target="_blank" class="btn" style="margin-left: 8px;">JSON API ↗</a>
+      <a href="http://localhost:5173" target="_blank" class="btn" style="margin-left: 8px;">Open App ↗</a>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat-card"><small>Users</small><b id="count-users">...</b></div>
+    <div class="stat-card"><small>Bookings</small><b id="count-bookings">...</b></div>
+    <div class="stat-card"><small>Trip Requests</small><b id="count-requests">...</b></div>
+    <div class="stat-card"><small>Cart Items</small><b id="count-cart">...</b></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('bookings', this)" id="tab-btn-bookings">Bookings</button>
+    <button class="tab-btn" onclick="showTab('requests', this)" id="tab-btn-requests">Trip Requests</button>
+    <button class="tab-btn" onclick="showTab('users', this)" id="tab-btn-users">Users</button>
+  </div>
+
+  <div id="bookings" class="tab-content active">
+    <table>
+      <thead>
+        <tr><th>Booking ID</th><th>Journey Title</th><th>Destination</th><th>Travellers</th><th>Price (₹)</th><th>Status</th><th>Payment</th><th>Created Date</th></tr>
+      </thead>
+      <tbody id="tbody-bookings">
+        <tr><td colspan="8" class="empty">Loading bookings...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="requests" class="tab-content">
+    <table>
+      <thead>
+        <tr><th>Request ID</th><th>Name</th><th>Email</th><th>Trip Idea</th><th>Month</th><th>Travellers</th><th>Budget</th><th>Date</th></tr>
+      </thead>
+      <tbody id="tbody-requests">
+        <tr><td colspan="8" class="empty">Loading trip requests...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="users" class="tab-content">
+    <table>
+      <thead>
+        <tr><th>User ID</th><th>Name</th><th>Email</th><th>Registered At</th></tr>
+      </thead>
+      <tbody id="tbody-users">
+        <tr><td colspan="4" class="empty">Loading users...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    function escapeHtml(s) {
+      if (!s) return '';
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    }
+
+    function showTab(id, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch('/api/db');
+        const data = await res.json();
+        
+        document.getElementById('count-users').innerText = data.counts.users;
+        document.getElementById('count-bookings').innerText = data.counts.bookings;
+        document.getElementById('count-requests').innerText = data.counts.tripRequests;
+        document.getElementById('count-cart').innerText = data.counts.cartItems;
+
+        document.getElementById('tab-btn-bookings').innerText = `Bookings (${data.counts.bookings})`;
+        document.getElementById('tab-btn-requests').innerText = `Trip Requests (${data.counts.tripRequests})`;
+        document.getElementById('tab-btn-users').innerText = `Users (${data.counts.users})`;
+
+        // Render Bookings
+        const bBody = document.getElementById('tbody-bookings');
+        if (data.bookings.length === 0) {
+          bBody.innerHTML = '<tr><td colspan="8" class="empty">No bookings found</td></tr>';
+        } else {
+          bBody.innerHTML = data.bookings.map(b => `
+            <tr>
+              <td><code>${escapeHtml(b.id)}</code></td>
+              <td><b>${escapeHtml(b.title)}</b></td>
+              <td>${escapeHtml(b.country || 'Global')}</td>
+              <td>${b.travellers}</td>
+              <td><b>₹${Number(b.price * b.travellers).toLocaleString('en-IN')}</b></td>
+              <td><span class="badge ${b.status === 'Confirmed' ? 'badge-paid' : 'badge-pending'}">${escapeHtml(b.status)}</span></td>
+              <td><span class="badge ${b.paymentStatus === 'Paid' ? 'badge-paid' : 'badge-pending'}">${escapeHtml(b.paymentStatus)}</span></td>
+              <td>${new Date(b.createdAt).toLocaleString()}</td>
+            </tr>
+          `).join('');
+        }
+
+        // Render Trip Requests
+        const rBody = document.getElementById('tbody-requests');
+        if (data.tripRequests.length === 0) {
+          rBody.innerHTML = '<tr><td colspan="8" class="empty">No trip requests found</td></tr>';
+        } else {
+          rBody.innerHTML = data.tripRequests.map(r => `
+            <tr>
+              <td><code>${escapeHtml(r.id)}</code></td>
+              <td><b>${escapeHtml(r.name || 'Not provided')}</b></td>
+              <td>${escapeHtml(r.email)}</td>
+              <td style="max-width: 320px;">${escapeHtml(r.idea)}</td>
+              <td>${escapeHtml(r.month || 'Flexible')}</td>
+              <td>${escapeHtml(r.travellers)}</td>
+              <td>${escapeHtml(r.budget)}</td>
+              <td>${new Date(r.createdAt).toLocaleString()}</td>
+            </tr>
+          `).join('');
+        }
+
+        // Render Users
+        const uBody = document.getElementById('tbody-users');
+        if (data.users.length === 0) {
+          uBody.innerHTML = '<tr><td colspan="4" class="empty">No users registered yet</td></tr>';
+        } else {
+          uBody.innerHTML = data.users.map(u => `
+            <tr>
+              <td><code>${escapeHtml(u.id)}</code></td>
+              <td><b>${escapeHtml(u.name)}</b></td>
+              <td>${escapeHtml(u.email)}</td>
+              <td>${new Date(u.createdAt).toLocaleString()}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load DB data:', err);
+      }
+    }
+
+    loadData();
+    // Auto-refresh every 5 seconds
+    setInterval(loadData, 5000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  googleId    String   @unique
+  email       String   @unique
+  name        String
+  picture     String?
+  phone       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  wishlist    WishlistItem[]
+  cart        CartItem[]
+  bookings    Booking[]
+  tripRequests TripRequest[]
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  packageId String
+  data      Json
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, packageId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  packageId String
+  quantity  Int      @default(1)
+  data      Json
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, packageId])
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  userId      String
+  packageId   String
+  title       String
+  country     String
+  price       Int
+  travellers  Int      @default(1)
+  status      String   @default("Awaiting payment")
+  paymentStatus String @default("Not paid")
+  paymentId   String?
+  orderId     String?
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TripRequest {
+  id         String   @id @default(cuid())
+  userId     String?
+  name       String?
+  email      String
+  idea       String
+  month      String?
+  travellers String
+  budget     String
+  status     String   @default("Received")
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
