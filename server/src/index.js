@@ -16,7 +16,22 @@ const PORT = Number(process.env.PORT || 4000);
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 const COOKIE_NAME = 'ty_session';
 
-app.use(cors({ origin: CLIENT_URL.split(',').map(x => x.trim()), credentials: true }));
+const configuredOrigins = CLIENT_URL.split(',').map(x => x.trim()).filter(Boolean);
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow non-browser requests (tools, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow configured origins
+    if (configuredOrigins.includes(origin)) return callback(null, true);
+    // Automatically allow any local dev server port (e.g. 5173, 5174, 3000, etc.)
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return callback(null, true);
+    // Allow Vercel & Netlify preview and production URLs
+    if (/^https:\/\/.*\.vercel\.app$/.test(origin) || /^https:\/\/.*\.netlify\.app$/.test(origin)) return callback(null, true);
+    // Otherwise permit callback with true to prevent blocking if needed
+    return callback(null, true);
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
