@@ -38,6 +38,7 @@ model CartItem {
   packageId String
   quantity  Int      @default(1)
   data      Json
+  createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, packageId])
 }

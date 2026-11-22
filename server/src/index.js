@@ -61,7 +61,7 @@ app.get('/api/db', async (_req, res) => {
       prisma.wishlistItem.findMany({ orderBy: { createdAt: 'desc' } }),
     ]);
     res.json({
-      database: 'SQLite (dev.db)',
+      database: 'Neon PostgreSQL (Permanent Cloud Database)',
       counts: {
         users: users.length,
         bookings: bookings.length,
