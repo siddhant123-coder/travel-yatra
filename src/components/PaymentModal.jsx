@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import { useTravel } from '../TravelStore';
 
 export default function PaymentModal() {
   const { activePaymentBooking, closePayment, processPayment, profile } = useTravel();
-  const [tab, setTab] = useState('upi'); // 'upi' | 'card' | 'netbanking'
+  const [tab, setTab] = useState('upi'); // 'upi' | 'card' | 'netbanking' | 'instant'
+  const [upiSubMode, setUpiSubMode] = useState('qr'); // 'qr' | 'id'
   const [upiId, setUpiId] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
@@ -142,61 +144,108 @@ export default function PaymentModal() {
             {/* Tab 1: UPI */}
             {tab === 'upi' && (
               <div className="tab-pane">
-                <label className="input-label">ENTER UPI ID / VPA</label>
-                <div className="upi-input-group">
-                  <input
-                    type="text"
-                    placeholder="e.g. mobile@upi, username@okhdfcbank"
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                    disabled={processing}
-                  />
+                {/* UPI Sub-Mode Switcher */}
+                <div className="upi-mode-switch">
                   <button
                     type="button"
-                    className="upi-quick-tag"
-                    onClick={() => setUpiId('siddhant@okhdfcbank')}
+                    className={`upi-sub-btn ${upiSubMode === 'qr' ? 'active' : ''}`}
+                    onClick={() => setUpiSubMode('qr')}
                   >
-                    Use Sample ID
+                    📱 Scan PhonePe QR
+                  </button>
+                  <button
+                    type="button"
+                    className={`upi-sub-btn ${upiSubMode === 'id' ? 'active' : ''}`}
+                    onClick={() => setUpiSubMode('id')}
+                  >
+                    ⌨ Enter UPI ID
                   </button>
                 </div>
 
-                <div className="upi-app-strip">
-                  <small>Or pay using any installed UPI app:</small>
-                  <div className="upi-badges">
-                    <span onClick={() => setUpiId('gpay@okaxis')}>Google Pay</span>
-                    <span onClick={() => setUpiId('phonepe@ybl')}>PhonePe</span>
-                    <span onClick={() => setUpiId('paytm@paytm')}>Paytm</span>
-                    <span onClick={() => setUpiId('bhim@upi')}>BHIM</span>
-                  </div>
-                </div>
+                {upiSubMode === 'qr' ? (
+                  <div className="phonepe-qr-card">
+                    <div className="phonepe-qr-header">
+                      <span className="phonepe-logo-pill">
+                        <span className="phonepe-icon">पे</span> PhonePe / UPI
+                      </span>
+                      <span className="phonepe-live-pill">● LIVE INTENT QR</span>
+                    </div>
 
-                <div className="qr-container">
-                  <div className="qr-box">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#d9bd83" strokeWidth="1.5">
-                      <rect x="3" y="3" width="7" height="7"></rect>
-                      <rect x="14" y="3" width="7" height="7"></rect>
-                      <rect x="14" y="14" width="7" height="7"></rect>
-                      <rect x="3" y="14" width="7" height="7"></rect>
-                      <line x1="7" y1="7" x2="7" y2="7.01"></line>
-                      <line x1="17" y1="7" x2="17" y2="7.01"></line>
-                      <line x1="7" y1="17" x2="7" y2="17.01"></line>
-                      <line x1="17" y1="17" x2="17" y2="17.01"></line>
-                    </svg>
+                    <div className="phonepe-qr-code-wrapper">
+                      <div className="phonepe-qr-white-bg">
+                        <QRCodeSVG
+                          value={`upi://pay?pa=travelyatra.simulator@phonepe&pn=Travel%20Yatra&am=${totalAmount}&cu=INR&tn=Booking%20${activePaymentBooking.id}`}
+                          size={180}
+                          level="M"
+                          includeMargin={true}
+                          fgColor="#111827"
+                          bgColor="#ffffff"
+                        />
+                      </div>
+                      <div className="phonepe-amount-badge">
+                        <small>AMOUNT DUE</small>
+                        <b>{formattedTotal}</b>
+                      </div>
+                    </div>
+
+                    <div className="phonepe-instructions">
+                      <p><b>1. Open PhonePe</b> on your phone and tap the <b>QR Scanner</b>.</p>
+                      <p><b>2. Scan this screen</b> — PhonePe will open the <b>Travel Yatra</b> payment sheet for <b>{formattedTotal}</b>.</p>
+                      <div className="phonepe-safe-badge">
+                        <span>🛡️ <b>Safe Simulator Mode:</b> No real money is deducted. Tap below once scanned to confirm your booking instantly.</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="payment-primary-btn phonepe-confirm-btn"
+                      disabled={processing}
+                      onClick={() => handlePay('PhonePe UPI QR (Simulated)')}
+                    >
+                      {processing ? processingStep || 'Verifying PhonePe...' : `✅ I've Scanned with PhonePe / Confirm Payment ➔`}
+                    </button>
                   </div>
+                ) : (
                   <div>
-                    <b>Scan & Pay with any UPI QR app</b>
-                    <small>Real-time instant settlement</small>
-                  </div>
-                </div>
+                    <label className="input-label">ENTER UPI ID / VPA</label>
+                    <div className="upi-input-group">
+                      <input
+                        type="text"
+                        placeholder="e.g. mobile@upi, username@okhdfcbank"
+                        value={upiId}
+                        onChange={(e) => setUpiId(e.target.value)}
+                        disabled={processing}
+                      />
+                      <button
+                        type="button"
+                        className="upi-quick-tag"
+                        onClick={() => setUpiId('siddhant@okhdfcbank')}
+                      >
+                        Use Sample ID
+                      </button>
+                    </div>
 
-                <button
-                  type="button"
-                  className="payment-primary-btn"
-                  disabled={processing}
-                  onClick={() => handlePay(`UPI (${upiId || 'Direct QR'})`)}
-                >
-                  {processing ? processingStep || 'Processing...' : `Pay ${formattedTotal} via UPI ➔`}
-                </button>
+                    <div className="upi-app-strip">
+                      <small>Or pay using any installed UPI app:</small>
+                      <div className="upi-badges">
+                        <span onClick={() => setUpiId('gpay@okaxis')}>Google Pay</span>
+                        <span onClick={() => setUpiId('phonepe@ybl')}>PhonePe</span>
+                        <span onClick={() => setUpiId('paytm@paytm')}>Paytm</span>
+                        <span onClick={() => setUpiId('bhim@upi')}>BHIM</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="payment-primary-btn"
+                      disabled={processing}
+                      onClick={() => handlePay(`UPI (${upiId || 'Direct UPI'})`)}
+                      style={{ marginTop: '16px' }}
+                    >
+                      {processing ? processingStep || 'Processing...' : `Pay ${formattedTotal} via UPI ➔`}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
