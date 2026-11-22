@@ -103,11 +103,36 @@ app.post('/api/auth/google', async (req, res) => {
     if (!payload?.sub || !payload.email) {
       return res.status(401).json({ error: 'Google could not verify your email address on this account.' });
     }
-    const user = await prisma.user.upsert({
-      where: { googleId: payload.sub },
-      update: { email: payload.email, name: payload.name || payload.email, picture: payload.picture || null },
-      create: { googleId: payload.sub, email: payload.email, name: payload.name || payload.email, picture: payload.picture || null }
+    // Find existing user by Google ID or by email
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { googleId: payload.sub },
+          { email: payload.email }
+        ]
+      }
     });
+
+    if (user) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          googleId: payload.sub,
+          email: payload.email,
+          name: payload.name || user.name || payload.email,
+          picture: payload.picture || user.picture || null
+        }
+      });
+    } else {
+      user = await prisma.user.create({
+        data: {
+          googleId: payload.sub,
+          email: payload.email,
+          name: payload.name || payload.email,
+          picture: payload.picture || null
+        }
+      });
+    }
     const token = jwt.sign({}, jwtSecret, { subject: user.id, expiresIn: '7d' });
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
@@ -126,11 +151,25 @@ app.post('/api/auth/dev-login', async (req, res) => {
     const email = req.body?.email?.trim() || 'siddhantsrivastava2005@gmail.com';
     const name = req.body?.name?.trim() || 'Siddhant Srivastava';
     const googleId = `dev_${email}`;
-    const user = await prisma.user.upsert({
-      where: { googleId },
-      update: { email, name },
-      create: { googleId, email, name, picture: null }
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { googleId },
+          { email }
+        ]
+      }
     });
+
+    if (user) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { name }
+      });
+    } else {
+      user = await prisma.user.create({
+        data: { googleId, email, name, picture: null }
+      });
+    }
     const token = jwt.sign({}, process.env.JWT_SECRET, { subject: user.id, expiresIn: '7d' });
     res.cookie(COOKIE_NAME, token, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
