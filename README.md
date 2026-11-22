@@ -4,6 +4,19 @@ A full-stack, luxury editorial travel platform designed to explore signature des
 
 ---
 
+## 🌐 Live Production Deployments
+
+| Component | Provider | Live URL | Status |
+| :--- | :--- | :--- | :--- |
+| **Frontend Application** | **Vercel** | [https://a-beryl-one.vercel.app](https://a-beryl-one.vercel.app) | 🟢 Live & Active |
+| **Backend API Service** | **Render** | [https://travel-yatra-api.onrender.com](https://travel-yatra-api.onrender.com) | 🟢 Live & Active |
+| **Database** | **Neon PostgreSQL** | Permanent Serverless Cloud Database | 🟢 Live & Synced |
+| **Live Database Viewer** | **Render / Neon** | [https://travel-yatra-api.onrender.com/db](https://travel-yatra-api.onrender.com/db) | 🟢 Live |
+| **Database JSON API** | **Render / Neon** | [https://travel-yatra-api.onrender.com/api/db](https://travel-yatra-api.onrender.com/api/db) | 🟢 Live |
+| **API Health Check** | **Render** | [https://travel-yatra-api.onrender.com/api/health](https://travel-yatra-api.onrender.com/api/health) | 🟢 200 OK |
+
+---
+
 ## 🌟 Highlights & Features
 
 - **🎨 Modern Luxury Editorial UI**: Fluid responsive layout inspired by modern design systems, built with React and Vite.
